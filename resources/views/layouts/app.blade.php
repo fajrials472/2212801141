@@ -78,7 +78,7 @@
 
                 @if (Auth::user()->role === 'admin')
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ route('prodi.index') }}">Manajemen Prodi</a>
+                        <a class="nav-link" href="{{ route('prodi.index') }}">Manajemen Prodi sih</a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="{{ route('dosen.index') }}">Manajemen Dosen</a>
