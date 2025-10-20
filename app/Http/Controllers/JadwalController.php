@@ -52,17 +52,31 @@ class JadwalController extends Controller
         $allProdi = Prodi::orderBy('nama_prodi')->get();
         $allKelas = Kelas::orderBy('nama_kelas')->get();
 
-        // PERBAIKAN: Mengambil daftar arsip jadwal dengan pagination
+        // PERBAIKAN: Mengambil daftar tahun ajaran untuk form generate
+        $allTahunAjaran = Kelas::distinct()->orderBy('angkatan', 'desc')->pluck('angkatan');
+
         $arsipJadwal = DB::table('jadwal_versions')->orderBy('created_at', 'desc')->paginate(5);
 
-        return view('jadwal', compact('jadwal', 'jenisSemester', 'allProdi', 'prodiId', 'allKelas', 'kelasId', 'arsipJadwal'));
+        // PERBAIKAN: Mengirim variabel allTahunAjaran ke view
+        return view('jadwal', compact('jadwal', 'jenisSemester', 'allProdi', 'prodiId', 'allKelas', 'kelasId', 'arsipJadwal', 'allTahunAjaran'));
     }
 
-    public function generate()
+    // PERBAIKAN: Mengubah method generate untuk menerima Request
+    public function generate(Request $request)
     {
-        // Method generate Anda memanggil service yang sudah diupdate
-        $this->jadwalService->generateJadwal();
-        return redirect()->route('jadwal.index')->with('success', 'Jadwal baru berhasil dibuat dan jadwal sebelumnya telah diarsipkan.');
+        // Validasi input dari form generate
+        $validated = $request->validate([
+            'tahun_ajaran' => 'required|string',
+            'jenis_semester' => 'required|in:gasal,genap',
+        ]);
+
+        // Panggil service dengan parameter yang sudah divalidasi
+        $this->jadwalService->generateJadwal($validated['tahun_ajaran'], $validated['jenis_semester']);
+
+        // Arahkan kembali ke halaman index dengan filter yang sama
+        return redirect()->route('jadwal.index', [
+            'jenis_semester' => $validated['jenis_semester']
+        ])->with('success', 'Jadwal baru berhasil dibuat dan jadwal sebelumnya telah diarsipkan.');
     }
 
     /**
@@ -70,6 +84,7 @@ class JadwalController extends Controller
      */
     public function lihatArsip($versionId)
     {
+        // ... (method ini tidak berubah)
         $versi = DB::table('jadwal_versions')->find($versionId);
         if (!$versi) {
             abort(404, 'Versi jadwal tidak ditemukan.');
@@ -82,16 +97,8 @@ class JadwalController extends Controller
             ->join('kelas', 'penugasan.kelas_id', '=', 'kelas.id')
             ->join('dosen', 'penugasan.dosen_id', '=', 'dosen.id')
             ->join('ruangan', 'arsip_jadwal.ruangan_id', '=', 'ruangan.id')
-            ->select(
-                'arsip_jadwal.hari',
-                'arsip_jadwal.jam_mulai',
-                'arsip_jadwal.jam_selesai',
-                'mata_kuliah.nama_mk',
-                'mata_kuliah.semester',
-                'kelas.nama_kelas',
-                'dosen.nama_dosen',
-                'ruangan.nama_ruangan'
-            )->get();
+            ->select('arsip_jadwal.hari', 'arsip_jadwal.jam_mulai', 'arsip_jadwal.jam_selesai', 'mata_kuliah.nama_mk', 'mata_kuliah.semester', 'kelas.nama_kelas', 'dosen.nama_dosen', 'ruangan.nama_ruangan')
+            ->get();
 
         $jadwal = $arsipData->groupBy('nama_kelas');
 
@@ -103,52 +110,34 @@ class JadwalController extends Controller
      */
     public function hapusArsip($versionId)
     {
-        // onDelete('cascade') di migrasi akan otomatis menghapus semua jadwal terkait
+        // ... (method ini tidak berubah)
         DB::table('jadwal_versions')->where('id', $versionId)->delete();
-
         return redirect()->route('jadwal.index')->with('success', 'Arsip jadwal berhasil dihapus.');
     }
 
     public function cetak(Request $request)
     {
-        // 1. Ambil query filter dari URL (sama seperti di method index)
+        // ... (method ini tidak berubah)
         $query = Jadwal::query();
         $jenisSemester = $request->input('jenis_semester');
         $prodiId = $request->input('prodi_id');
 
-        // 2. Terapkan filter semester
         if ($jenisSemester) {
             $query->whereHas('penugasan.mataKuliah', function ($q) use ($jenisSemester) {
                 if ($jenisSemester === 'gasal') $q->whereRaw('semester % 2 = 1');
                 elseif ($jenisSemester === 'genap') $q->whereRaw('semester % 2 = 0');
             });
         }
-
-        // 3. Terapkan filter prodi
         if ($prodiId) {
             $query->whereHas('penugasan.kelas.prodi', function ($q) use ($prodiId) {
                 $q->where('id', $prodiId);
             });
         }
 
-        // 4. Ambil data prodi untuk ditampilkan di header
         $prodi = $prodiId ? Prodi::find($prodiId) : null;
-
-        // 5. Ambil data jadwal dan kelompokkan berdasarkan kelas
-        $jadwalPerKelas = $query->with([
-            'penugasan.mataKuliah',
-            'penugasan.dosen',
-            'penugasan.kelas.prodi', // Pastikan relasi ini ada
-            'ruangan'
-        ])
-            ->get()
-            ->sortBy('penugasan.kelas.nama_kelas') // Urutkan berdasarkan nama kelas
-            ->groupBy('penugasan.kelas.nama_kelas');
-
-        // 6. Siapkan data tanggal untuk dicetak
+        $jadwalPerKelas = $query->with(['penugasan.mataKuliah', 'penugasan.dosen', 'penugasan.kelas.prodi', 'ruangan'])->get()->sortBy('penugasan.kelas.nama_kelas')->groupBy('penugasan.kelas.nama_kelas');
         $tanggalSekarang = Carbon::now()->translatedFormat('d F Y');
 
-        // 7. Kirim semua data ke view cetak yang baru
         return view('jadwal_cetak', compact('jadwalPerKelas', 'prodi', 'tanggalSekarang'));
     }
 }

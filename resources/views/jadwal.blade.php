@@ -24,19 +24,46 @@
             <div class="card-header">Opsi Jadwal</div>
             <div class="card-body">
                 <div class="row align-items-center">
-                    <div class="col-md-2 mb-3 mb-md-0">
-                        <form action="{{ route('jadwal.generate') }}" method="POST" class="d-grid">
+
+                    {{-- PERBAIKAN: Form Generate Jadwal Baru --}}
+                    <div class="col-md-6 mb-3 mb-md-0 border-end">
+                        <form action="{{ route('jadwal.generate') }}" method="POST">
                             @csrf
-                            <button type="submit" class="btn btn-primary"
-                                onclick="return confirm('Yakin ingin membuat jadwal baru? Jadwal lama akan diarsipkan.')">
-                                Generate Jadwal Baru
-                            </button>
+                            <h5 class="mb-3">Generate Jadwal Baru</h5>
+                            <div class="row">
+                                <div class="col-md-5">
+                                    <label for="tahun_ajaran" class="form-label">Pilih Tahun Ajaran</label>
+                                    <select name="tahun_ajaran" id="tahun_ajaran" class="form-select" required>
+                                        <option value="">-- Pilih Tahun --</option>
+                                        @foreach ($allTahunAjaran as $tahun)
+                                            <option value="{{ $tahun }}">{{ $tahun }}/{{ $tahun + 1 }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <div class="col-md-5">
+                                    <label for="jenis_semester_gen" class="form-label">Pilih Semester</label>
+                                    <select name="jenis_semester" id="jenis_semester_gen" class="form-select" required>
+                                        <option value="">-- Pilih Semester --</option>
+                                        <option value="gasal">Gasal</option>
+                                        <option value="genap">Genap</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-2 d-flex align-items-end">
+                                    <button type="submit" class="btn btn-primary w-100"
+                                        onclick="return confirm('Yakin ingin membuat jadwal baru untuk periode ini? Jadwal lama di periode ini akan diarsipkan.')">
+                                        Generate
+                                    </button>
+                                </div>
+                            </div>
                         </form>
                     </div>
-                    <div class="col-md-10">
+
+                    <div class="col-md-6">
                         <form action="{{ route('jadwal.index') }}" method="GET" id="filter-form">
+                            <h5 class="mb-3">Filter Tampilan Jadwal</h5>
                             <div class="row g-3 align-items-end">
-                                <div class="col-md-3">
+                                <div class="col-md-4">
                                     <label for="prodi_id" class="form-label">Prodi</label>
                                     <select name="prodi_id" id="prodi_id" class="form-select"
                                         onchange="this.form.submit()">
@@ -49,20 +76,7 @@
                                         @endforeach
                                     </select>
                                 </div>
-                                <div class="col-md-3">
-                                    <label for="kelas_id" class="form-label">Kelas</label>
-                                    <select name="kelas_id" id="kelas_id" class="form-select"
-                                        onchange="this.form.submit()">
-                                        <option value="">Semua Kelas</option>
-                                        @foreach ($allKelas as $kelas)
-                                            <option value="{{ $kelas->id }}"
-                                                {{ ($kelasId ?? '') == $kelas->id ? 'selected' : '' }}>
-                                                {{ $kelas->nama_kelas }}
-                                            </option>
-                                        @endforeach
-                                    </select>
-                                </div>
-                                <div class="col-md-3">
+                                <div class="col-md-4">
                                     <label for="jenis_semester" class="form-label">Semester</label>
                                     <select name="jenis_semester" id="jenis_semester" class="form-select"
                                         onchange="this.form.submit()">
@@ -73,7 +87,7 @@
                                             Genap</option>
                                     </select>
                                 </div>
-                                <div class="col-md-3">
+                                <div class="col-md-4">
                                     <a href="{{ route('jadwal.index') }}" class="btn btn-secondary w-100">Reset Filter</a>
                                 </div>
                             </div>
@@ -116,9 +130,7 @@
                                         'Sabtu' => 6,
                                     ];
                                     $jadwalGroupedByDay = $allJadwals
-                                        ->sortBy(function ($jadwal) use ($dayOrder) {
-                                            return $dayOrder[$jadwal->hari] ?? 99;
-                                        })
+                                        ->sortBy(fn($j) => $dayOrder[$j->hari] ?? 99)
                                         ->groupBy('hari');
                                 @endphp
                                 @forelse ($jadwalGroupedByDay as $hari => $jadwalsOnThisDay)
@@ -153,11 +165,11 @@
         @else
             <div class="alert alert-info text-center">
                 <h4>Jadwal Aktif Kosong.</h4>
-                <p class="text-muted mb-0">Silakan generate jadwal baru.</p>
+                <p class="text-muted mb-0">Silakan generate jadwal baru untuk periode yang diinginkan.</p>
             </div>
         @endif
 
-        {{-- PERBAIKAN: Tabel Arsip Jadwal Terdahulu --}}
+        {{-- Tabel Arsip Jadwal Terdahulu --}}
         <div class="card mt-5">
             <div class="card-header">
                 <h3 class="card-title">Arsip Jadwal Terdahulu</h3>
@@ -197,7 +209,6 @@
                         </tbody>
                     </table>
                 </div>
-                {{-- Pagination untuk arsip --}}
                 <div class="d-flex justify-content-end mt-3">
                     {{ $arsipJadwal->links() }}
                 </div>
