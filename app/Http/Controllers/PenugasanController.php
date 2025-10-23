@@ -14,8 +14,9 @@ class PenugasanController extends Controller
     public function index(Request $request)
     {
         $prodiId = $request->input('prodi_id');
-        // PERBAIKAN: Menggunakan variabel baru untuk jenis semester
-        $jenisSemester = $request->input('jenis_semester');
+
+        // PERBAIKAN: 'jenis_semester' kini memiliki default 'gasal'
+        $jenisSemester = $request->input('jenis_semester', 'gasal');
 
         $allProdi = Prodi::all();
         $allDosen = Dosen::with('prodi')->get();
@@ -27,21 +28,18 @@ class PenugasanController extends Controller
             $query->where('prodi_id', $prodiId);
         }
 
-        // PERBAIKAN: Logika filter untuk semester gasal/genap
-        if ($jenisSemester) {
-            if ($jenisSemester === 'gasal') {
-                // Modulo 2 = 1 untuk angka ganjil
-                $query->whereRaw('semester % 2 = 1');
-            } elseif ($jenisSemester === 'genap') {
-                // Modulo 2 = 0 untuk angka genap
-                $query->whereRaw('semester % 2 = 0');
-            }
+        // Logika filter untuk semester gasal/genap (sekarang akan selalu aktif)
+        if ($jenisSemester === 'gasal') {
+            // Gasal adalah semester 1, 3, 5, 7
+            $query->whereIn('semester', [1, 3, 5, 7]);
+        } elseif ($jenisSemester === 'genap') {
+            // Genap adalah semester 2, 4, 6, 8
+            $query->whereIn('semester', [2, 4, 6, 8]);
         }
 
         $mataKuliah = $query->get();
         $penugasan = DB::table('penugasan')->get();
 
-        // PERBAIKAN: Mengirim variabel yang benar ke view
         return view('penugasan', compact('mataKuliah', 'allDosen', 'allKelas', 'penugasan', 'jenisSemester', 'allProdi', 'prodiId'));
     }
 
@@ -49,7 +47,6 @@ class PenugasanController extends Controller
     {
         $assignments = $request->input('assignments', []);
 
-        // Mengambil semua mata kuliah ID dari request
         $submittedMkIds = array_column($assignments, 'mata_kuliah_id');
         if (!empty($submittedMkIds)) {
             DB::table('penugasan')
@@ -69,7 +66,6 @@ class PenugasanController extends Controller
             }
         }
 
-        // PERBAIKAN: Mengirim kembali parameter filter yang benar
         return redirect()->route('penugasan.index', [
             'jenis_semester' => $request->jenis_semester,
             'prodi_id' => $request->prodi_id

@@ -16,7 +16,7 @@ use App\Http\Controllers\JadwalLihatController;
 use App\Http\Controllers\RekapController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\DataExportController;
-
+use App\Http\Controllers\SemesterController;
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -84,6 +84,9 @@ Route::middleware(['auth'])->group(function () {
 
             Route::get('/arsip-jadwal/{versionId}', [JadwalController::class, 'lihatArsip'])->name('arsip.jadwal.show');
             Route::delete('/arsip-jadwal/{versionId}', [JadwalController::class, 'hapusArsip'])->name('arsip.jadwal.destroy');
+
+            Route::post('/semester/naikkan', [SemesterController::class, 'naikkanSemester'])->name('semester.naikkan');
+            Route::post('/semester/turunkan', [SemesterController::class, 'turunkanSemester'])->name('semester.turunkan');
         });
 
     // =====================================================================

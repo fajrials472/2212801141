@@ -5,6 +5,13 @@
 @section('content')
     <h1 class="mb-4">Dashboard Admin</h1>
 
+    @if (session('success'))
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            {{ session('success') }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    @endif
+
     {{-- Kartu Statistik --}}
     <div class="row">
         <div class="col-lg-3 col-6">
@@ -65,6 +72,41 @@
         </div>
     </div>
 
+    {{-- PERBAIKAN: Card Baru untuk Pengaturan Akademik --}}
+    <div class="row mt-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title"><i class="fas fa-cogs me-2"></i>Pengaturan Akademik</h3>
+                </div>
+                <div class="card-body">
+                    <p class="card-text">Gunakan tombol ini untuk memajukan atau memundurkan semester semua kelas secara
+                        bersamaan. Lakukan ini hanya satu kali di awal semester baru.</p>
+                    <div class="d-flex justify-content-between">
+
+                        <form action="{{ route('semester.naikkan') }}" method="POST"
+                            onsubmit="return confirm('Anda yakin ingin MENAIKKAN semester semua kelas? (Contoh: Smt 1 menjadi Smt 2). Aksi ini akan mempengaruhi data kelas.')">
+                            @csrf
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-arrow-up me-1"></i> Naikkan 1 Semester
+                            </button>
+                        </form>
+
+                        <form action="{{ route('semester.turunkan') }}" method="POST"
+                            onsubmit="return confirm('PERHATIAN: Anda yakin ingin MENURUNKAN semester semua kelas? (Contoh: Smt 2 menjadi Smt 1). Gunakan ini hanya jika terjadi kesalahan.')">
+                            @csrf
+                            <button type="submit" class="btn btn-warning">
+                                <i class="fas fa-arrow-down me-1"></i> Turunkan 1 Semester
+                            </button>
+                        </form>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
     {{-- Fitur Download Data --}}
     <div class="row mt-4">
         {{-- Download Data Mahasiswa --}}
@@ -73,15 +115,14 @@
                 <div class="card-header">
                     <h3 class="card-title"><i class="fas fa-download me-2"></i>Download Data Mahasiswa</h3>
                 </div>
-                {{-- PERBAIKAN: Menambahkan kurung kurawal {{ }} --}}
                 <form action="{{ route('mahasiswa.download') }}" method="GET" target="_blank">
                     <div class="card-body">
                         <div class="mb-3">
                             <label for="kelas_id" class="form-label">Berdasarkan Kelas</label>
                             <select name="kelas_id" id="kelas_id" class="form-select">
                                 <option value="semua">-- Semua Kelas --</option>
-                                @foreach($allKelas as $kelas)
-                                <option value="{{ $kelas->id }}">{{ $kelas->nama_kelas }}</option>
+                                @foreach ($allKelas as $kelas)
+                                    <option value="{{ $kelas->id }}">{{ $kelas->nama_kelas }}</option>
                                 @endforeach
                             </select>
                         </div>
@@ -89,8 +130,8 @@
                             <label for="angkatan" class="form-label">Berdasarkan Angkatan</label>
                             <select name="angkatan" id="angkatan" class="form-select">
                                 <option value="semua">-- Semua Angkatan --</option>
-                                 @foreach($allAngkatan as $angkatan)
-                                <option value="{{ $angkatan }}">{{ $angkatan }}</option>
+                                @foreach ($allAngkatan as $angkatan)
+                                    <option value="{{ $angkatan }}">{{ $angkatan }}</option>
                                 @endforeach
                             </select>
                         </div>
@@ -108,15 +149,14 @@
                 <div class="card-header">
                     <h3 class="card-title"><i class="fas fa-download me-2"></i>Download Data Dosen</h3>
                 </div>
-                {{-- PERBAIKAN: Menambahkan kurung kurawal {{ }} --}}
                 <form action="{{ route('dosen.download') }}" method="GET" target="_blank">
                     <div class="card-body">
                         <div class="mb-3">
                             <label for="prodi_id_dosen" class="form-label">Berdasarkan Prodi</label>
                             <select name="prodi_id" id="prodi_id_dosen" class="form-select">
                                 <option value="semua">-- Semua Prodi --</option>
-                                @foreach($allProdi as $prodi)
-                                <option value="{{ $prodi->id }}">{{ $prodi->nama_prodi }}</option>
+                                @foreach ($allProdi as $prodi)
+                                    <option value="{{ $prodi->id }}">{{ $prodi->nama_prodi }}</option>
                                 @endforeach
                             </select>
                         </div>
