@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
 
+
 class DosenController extends Controller
 {
     /**
@@ -42,45 +43,41 @@ class DosenController extends Controller
         return view('dosen', compact('dosen', 'prodi', 'prodiId'));
     }
 
-    /**
-     * Menyimpan dosen baru DAN membuat user terkait secara sinkron.
-     */
     public function store(Request $request)
     {
         $validated = $request->validate([
             'nama_dosen' => 'required|string|max:255',
+            'nidn'       => 'required|string|unique:users,nidn|unique:dosen,nidn',
+            'email'      => 'required|email|unique:users,email',
             'alamat'     => 'required|string',
-            'nbm'        => 'nullable|string|max:20|unique:dosen,nbm',
-            'nidn'       => 'required|string|max:20|unique:dosen,nidn',
-            'email'      => 'required|email|max:255|unique:users,email', // Validasi ke tabel users
             'prodi'      => 'required|array',
-            'prodi.*'    => 'exists:prodi,id',
         ]);
 
-        // Menggunakan transaction untuk memastikan kedua operasi (membuat user dan dosen)
-        // berhasil atau keduanya dibatalkan jika terjadi error.
-        DB::transaction(function () use ($request, $validated) {
-            // 1. Buat User terlebih dahulu
+        DB::transaction(function () use ($validated, $request) {
+            // 1. Buat User terlebih dahulu dengan password default
             $user = User::create([
                 'name'     => $validated['nama_dosen'],
                 'email'    => $validated['email'],
                 'nidn'     => $validated['nidn'],
-                'nbm'      => $validated['nbm'] ?? null,
-                'password' => Hash::make('password'), // Ganti dengan password default yang aman
+                'password' => Hash::make('password123'), // Ganti dengan password default yang aman
                 'role'     => 'dosen',
             ]);
 
-            // 2. Buat Dosen dan hubungkan dengan user_id yang baru dibuat
-            $dosenData = $validated;
-            $dosenData['user_id'] = $user->id; // Ini adalah kunci penghubungnya
+            // 2. Buat profil Dosen dan hubungkan dengan user_id
+            $dosen = Dosen::create([
+                'user_id'    => $user->id,
+                'nama_dosen' => $validated['nama_dosen'],
+                'nidn'       => $validated['nidn'],
+                'email'      => $validated['email'],
+                'alamat'     => $validated['alamat'],
+                'nbm'        => $request->nbm,
+            ]);
 
-            $dosen = Dosen::create($dosenData);
-
-            // 3. Hubungkan dosen dengan prodi yang dipilih
-            $dosen->prodi()->attach($request->prodi);
+            // 3. Sambungkan Dosen dengan Prodi
+            $dosen->prodi()->sync($validated['prodi']);
         });
 
-        return redirect()->route('dosen.index')->with('success', 'Dosen berhasil ditambahkan beserta akun user-nya.');
+        return redirect()->route('dosen.index')->with('success', 'Dosen baru berhasil ditambahkan.');
     }
 
     /**
