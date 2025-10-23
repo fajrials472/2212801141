@@ -13,9 +13,7 @@ use Illuminate\Validation\Rule;
 
 class DosenController extends Controller
 {
-    /**
-     * Menampilkan daftar dosen.
-     */
+
     public function index(Request $request)
     {
         $query = Dosen::query();
@@ -80,9 +78,7 @@ class DosenController extends Controller
         return redirect()->route('dosen.index')->with('success', 'Dosen baru berhasil ditambahkan.');
     }
 
-    /**
-     * Mengupdate data dosen DAN user terkait secara sinkron.
-     */
+
     public function update(Request $request, Dosen $dosen)
     {
         $validated = $request->validate([
@@ -90,7 +86,6 @@ class DosenController extends Controller
             'alamat'     => 'required|string',
             'nbm'        => ['nullable', 'string', 'max:20', Rule::unique('dosen')->ignore($dosen->id)],
             'nidn'       => ['required', 'string', 'max:20', Rule::unique('dosen')->ignore($dosen->id)],
-            // Pastikan email unik di tabel users, tapi abaikan user yang sedang diedit
             'email'      => ['required', 'email', 'max:255', Rule::unique('users')->ignore($dosen->user_id)],
             'prodi'      => 'required|array',
             'prodi.*'    => 'exists:prodi,id',
