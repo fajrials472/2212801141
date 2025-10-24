@@ -5,9 +5,18 @@
 @section('content')
     <h1 class="mb-4">Manajemen Mahasiswa</h1>
 
+    {{-- Notifikasi Sukses --}}
     @if (session('success'))
         <div class="alert alert-success alert-dismissible fade show" role="alert">
             {{ session('success') }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    @endif
+
+    {{-- Notifikasi Error --}}
+    @if (session('error'))
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            {{ session('error') }}
             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
     @endif
@@ -74,6 +83,17 @@
                                         onclick="editMahasiswa({{ $item->id }}, '{{ addslashes($item->nama) }}', '{{ $item->nim }}', '{{ addslashes($item->alamat ?? '') }}')">
                                         Edit
                                     </button>
+
+                                    {{-- PERBAIKAN: Tombol untuk Buat User --}}
+                                    @if (is_null($item->user_id))
+                                        <form action="{{ route('mahasiswa.createUser', $item->id) }}" method="POST"
+                                            class="d-inline"
+                                            onsubmit="return confirm('Anda yakin ingin membuat akun user untuk {{ addslashes($item->nama) }}? Email akan dibuat dari NIM dan password default adalah \'password123\'.')">
+                                            @csrf
+                                            <button type="submit" class="btn btn-success btn-sm">Buat User</button>
+                                        </form>
+                                    @endif
+
                                     <form action="{{ route('mahasiswa.destroy', $item->id) }}" method="POST"
                                         class="d-inline"
                                         onsubmit="return confirm('Apakah Anda yakin ingin menghapus mahasiswa ini?')">
@@ -85,7 +105,8 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="5" class="text-center">Tidak ada data mahasiswa.</td>
+                                {{-- Pastikan colspan adalah 6 --}}
+                                <td colspan="6" class="text-center">Tidak ada data mahasiswa.</td>
                             </tr>
                         @endforelse
                     </tbody>

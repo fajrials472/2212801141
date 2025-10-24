@@ -68,6 +68,8 @@ Route::middleware(['auth'])->group(function () {
             Route::resource('ruangan', RuanganController::class)->except(['show']);
             Route::resource('kelas', KelasController::class)->parameters(['kelas' => 'kelas']);
 
+            Route::post('/mahasiswa/{mahasiswa}/create-user', [MahasiswaController::class, 'createUser'])->name('mahasiswa.createUser');
+
             // Penugasan & Generate Jadwal
             Route::get('/penugasan', [PenugasanController::class, 'index'])->name('penugasan.index');
             Route::post('/penugasan', [PenugasanController::class, 'store'])->name('penugasan.store');

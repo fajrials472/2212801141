@@ -13,16 +13,20 @@ class Mahasiswa extends Model
 
     protected $table = 'mahasiswa';
 
+    /**
+     * PERBAIKAN: Pastikan semua kolom (termasuk 'nama') ada di sini
+     * dan 'user_id' tidak duplikat.
+     */
     protected $fillable = [
-        'nama',
+        'nama', // Pastikan ini 'nama', BUKAN 'nama_mahasiswa'
         'nim',
         'alamat',
+        'angkatan',
         'user_id',
         'tempat_lahir',
         'tanggal_lahir',
         'no_hp',
         'foto',
-        'user_id',
     ];
 
     public function user(): BelongsTo
@@ -30,21 +34,20 @@ class Mahasiswa extends Model
         return $this->belongsTo(User::class);
     }
 
-    /**
-     * Get the Kelas that the Mahasiswa is enrolled in.
-     */
     public function kelas(): BelongsToMany
     {
         return $this->belongsToMany(Kelas::class, 'mahasiswa_kelas');
     }
-
 
     protected static function boot()
     {
         parent::boot();
 
         static::deleting(function ($mahasiswa) {
-            $mahasiswa->user()->delete();
+            // Hapus user terkait jika ada
+            if ($mahasiswa->user) {
+                $mahasiswa->user->delete();
+            }
         });
     }
 }

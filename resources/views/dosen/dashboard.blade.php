@@ -7,14 +7,13 @@
         <div class="card" style="min-width: 1200px;">
             <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
                 <h3 class="card-title mb-0">Jadwal Mengajar Anda</h3>
-                {{-- Tombol cetak ini akan mengirimkan filter yang sedang aktif --}}
                 <a href="{{ route('dosen.jadwal.cetak', ['tahun_ajaran' => request('tahun_ajaran'), 'jenis_semester' => request('jenis_semester')]) }}"
                     class="btn btn-light btn-sm" target="_blank">
                     <i class="fas fa-print"></i> Cetak Jadwal
                 </a>
             </div>
             <div class="card-body">
-                {{-- PERBAIKAN: Form filter baru untuk Tahun Ajaran dan Semester --}}
+                {{-- Form filter untuk Tahun Ajaran dan Semester --}}
                 <div class="row mb-4 align-items-center">
                     <div class="col-md-8">
                         <form action="{{ route('dosen.dashboard') }}" method="GET" id="filter-form">

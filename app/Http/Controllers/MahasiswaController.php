@@ -17,13 +17,11 @@ class MahasiswaController extends Controller
      */
     public function index(Request $request)
     {
-        // Eager load relasi untuk efisiensi
         $query = Mahasiswa::with(['user.kelas', 'kelas']);
 
         if ($request->filled('search')) {
             $search = $request->input('search');
             $query->where(function ($q) use ($search) {
-                // Pastikan mencari di kolom 'nama'
                 $q->where('nama', 'like', "%{$search}%")
                     ->orWhere('nim', 'like', "%{$search}%");
             });
@@ -32,30 +30,29 @@ class MahasiswaController extends Controller
         $mahasiswa = $query->latest()->paginate(10);
         $kelas = Kelas::orderBy('nama_kelas')->get();
 
-        // Pastikan memanggil view yang benar
         return view('mahasiswa', compact('mahasiswa', 'kelas'));
     }
 
     /**
-     * Menyimpan mahasiswa baru DAN membuat user terkait.
+     * PERBAIKAN: Menyimpan mahasiswa baru DAN membuat user terkait.
      */
     public function store(Request $request)
     {
         $validated = $request->validate([
-            // Gunakan 'nama' secara konsisten
             'nama' => 'required|string|max:255',
             'nim' => 'required|string|max:20|unique:mahasiswa,nim|unique:users,nim',
             'alamat' => 'nullable|string',
         ]);
 
         DB::transaction(function () use ($validated) {
-            // 1. Buat User dengan email dummy
+            // 1. Buat User terlebih dahulu
             $user = User::create([
                 'name' => $validated['nama'],
-                'email' => $validated['nim'] . '@no-email.com',
+                'email' => $validated['nim'] . '@no-email.com', // Email dummy unik
                 'nim' => $validated['nim'],
-                'password' => Hash::make('password123'), // Ganti dengan password yang lebih aman atau generate acak
+                'password' => Hash::make('password123'), // Password default
                 'role' => 'mahasiswa',
+                'kelas_id' => null,
             ]);
 
             // 2. Buat profil Mahasiswa dan hubungkan dengan user_id
@@ -67,10 +64,43 @@ class MahasiswaController extends Controller
             ]);
         });
 
-        // Redirect ke nama rute yang benar
-        return redirect()->route('mahasiswa.index')->with('success', 'Mahasiswa berhasil ditambahkan.');
+        return redirect()->route('mahasiswa.index')->with('success', 'Mahasiswa berhasil ditambahkan beserta akun user-nya.');
     }
 
+
+    /**
+     * FITUR BARU: Membuat akun User untuk mahasiswa yang sudah ada
+     */
+    public function createUser(Mahasiswa $mahasiswa)
+    {
+        // 1. Cek dulu apakah user_id sudah terisi
+        if ($mahasiswa->user_id) {
+            return redirect()->back()->with('error', 'Mahasiswa ini sudah memiliki akun user.');
+        }
+
+        // 2. Cek apakah NIM/Email sudah terpakai di tabel users
+        $emailDummy = $mahasiswa->nim . '@no-email.com';
+        $userExists = User::where('nim', $mahasiswa->nim)->orWhere('email', $emailDummy)->exists();
+
+        if ($userExists) {
+            return redirect()->back()->with('error', 'User dengan NIM/Email ini sudah ada. Sinkronisasi manual diperlukan.');
+        }
+
+        // 3. Buat user baru
+        $user = User::create([
+            'name' => $mahasiswa->nama,
+            'email' => $emailDummy,
+            'nim' => $mahasiswa->nim,
+            'password' => Hash::make('password123'), // Password default
+            'role' => 'mahasiswa',
+        ]);
+
+        // 4. Sambungkan user baru ke mahasiswa
+        $mahasiswa->user_id = $user->id;
+        $mahasiswa->save();
+
+        return redirect()->route('mahasiswa.index')->with('success', 'Akun user untuk ' . $mahasiswa->nama . ' berhasil dibuat.');
+    }
     /**
      * Mengupdate data mahasiswa DAN user terkait.
      */
