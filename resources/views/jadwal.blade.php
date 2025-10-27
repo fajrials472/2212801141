@@ -197,7 +197,7 @@
                                             onsubmit="return confirm('Yakin ingin menghapus arsip ini secara permanen?')">
                                             @csrf
                                             @method('DELETE')
-                                            <button type="submit" class="btn btn-danger btn-sm">Hapus</button>
+                                            <button typeM="submit" class="btn btn-danger btn-sm">Hapus</button>
                                         </form>
                                     </td>
                                 </tr>

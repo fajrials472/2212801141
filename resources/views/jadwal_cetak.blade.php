@@ -53,7 +53,6 @@
             padding-bottom: 10px;
         }
 
-        /* PERBAIKAN: Teks kop surat rata kiri */
         .kop-surat .text-kop {
             text-align: left;
             padding-left: 20px;
@@ -64,7 +63,6 @@
             margin: 0;
         }
 
-        /* PERBAIKAN: Ukuran font kop surat diperbesar */
         .kop-surat h1 {
             font-size: 32px;
         }
@@ -73,7 +71,6 @@
             font-size: 18px;
         }
 
-        /* PERBAIKAN: Garis bawah dihilangkan dan jarak diatur */
         .title-bar {
             text-align: center;
             padding: 15px 0 5px 0;
@@ -124,13 +121,19 @@
         .signature-space {
             height: 60px;
         }
+
+        .page-break {
+            page-break-after: always;
+        }
     </style>
 </head>
 
 <body>
     @forelse ($jadwalPerKelas as $namaKelompok => $jadwals)
-        {{-- PERBAIKAN: Hapus kelas 'page-break' dari container utama --}}
-        <div class="container">
+
+        {{-- PERBAIKAN: Logika if diletakkan di sini. Kelas 'page-break' hanya ditambahkan jika BUKAN halaman terakhir. --}}
+        <div class="container @if (!$loop->last) page-break @endif">
+
             <div class="kop-surat">
                 <table style="width: 100%; border: none;">
                     <tr>
@@ -240,10 +243,7 @@
             </div>
         </div>
 
-        {{-- PERBAIKAN: Pindahkan @if ke sini --}}
-        @if (!$loop->last)
-            <div style="page-break-after: always;"></div>
-        @endif
+        {{-- PERBAIKAN: Menghapus div page-break tambahan dari sini --}}
 
     @empty
         <div class="container">

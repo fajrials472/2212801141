@@ -31,22 +31,26 @@ class JadwalService
     public function generateJadwal($tahunAjaran, $jenisSemester)
     {
         // 1. Dapatkan ID penugasan yang relevan untuk periode ini
-        $penugasanIds = DB::table('penugasan')
+        $penugasanIdsQuery = DB::table('penugasan')
             ->join('kelas', 'penugasan.kelas_id', '=', 'kelas.id')
-            ->join('mata_kuliah', 'penugasan.mata_kuliah_id', '=', 'mata_kuliah.id')
-            ->where('kelas.angkatan', $tahunAjaran)
-            ->where(function ($query) use ($jenisSemester) {
-                if ($jenisSemester === 'gasal') {
-                    $query->whereRaw('mata_kuliah.semester % 2 = 1');
-                } elseif ($jenisSemester === 'genap') {
-                    $query->whereRaw('mata_kuliah.semester % 2 = 0');
-                }
-            })
-            ->pluck('penugasan.id');
+            ->join('mata_kuliah', 'penugasan.mata_kuliah_id', '=', 'mata_kuliah.id');
+
+        // PERBAIKAN: HAPUS filter berdasarkan angkatan
+        // ->where('kelas.angkatan', $tahunAjaran) // <-- BARIS INI DIHAPUS
+
+        // Filter HANYA berdasarkan Jenis Semester (Gasal/Genap)
+        if ($jenisSemester === 'gasal') {
+            $penugasanIdsQuery->whereRaw('mata_kuliah.semester % 2 = 1');
+        } elseif ($jenisSemester === 'genap') {
+            $penugasanIdsQuery->whereRaw('mata_kuliah.semester % 2 = 0');
+        }
+
+        $penugasanIds = $penugasanIdsQuery->pluck('penugasan.id');
 
         // 2. Arsipkan dan Hapus jadwal lama HANYA untuk penugasan yang relevan
         $jadwalAktif = DB::table('jadwal')->whereIn('penugasan_id', $penugasanIds)->get();
         if ($jadwalAktif->isNotEmpty()) {
+            // Kita tetap gunakan $tahunAjaran di sini HANYA UNTUK NAMA ARSIP
             $namaVersi = 'Arsip Jadwal ' . $tahunAjaran . ' (' . ucfirst($jenisSemester) . ') - ' . now()->format('d M Y');
             $versionId = DB::table('jadwal_versions')->insertGetId([
                 'nama_versi' => $namaVersi,
@@ -65,7 +69,6 @@ class JadwalService
             ])->toArray();
             DB::table('arsip_jadwal')->insert($jadwalUntukArsip);
 
-            // Hapus jadwal lama yang relevan
             DB::table('jadwal')->whereIn('penugasan_id', $penugasanIds)->delete();
         }
 
@@ -81,6 +84,7 @@ class JadwalService
 
         set_time_limit(300);
 
+        // ... (Sisa logika perulangan 'while' Anda tidak perlu diubah) ...
         $ruangan = Ruangan::all();
         $jadwalDosen = [];
         $jadwalRuangan = [];
