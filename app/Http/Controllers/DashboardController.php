@@ -58,9 +58,13 @@ class DashboardController extends Controller
 
             $jadwalData = $jadwalQuery->get();
             $dayOrder = ['Senin' => 1, 'Selasa' => 2, 'Rabu' => 3, 'Kamis' => 4, 'Jumat' => 5, 'Sabtu' => 6];
+
+            // PERBAIKAN: Gunakan 'keyBy' untuk menjaga urutan hari
             $jadwalGroupedByDay = $jadwalData->sortBy(function ($jadwal) use ($dayOrder) {
                 return $dayOrder[$jadwal->hari] ?? 99;
-            })->groupBy('hari');
+            })->groupBy('hari')->keyBy(function ($item, $key) use ($dayOrder) {
+                return $dayOrder[$key] ?? 99;
+            })->sortKeys();
 
             $allTahunAjaran = Kelas::distinct()->orderBy('angkatan', 'desc')->pluck('angkatan');
 
