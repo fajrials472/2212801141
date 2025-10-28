@@ -77,7 +77,6 @@
             font-weight: bold;
             font-size: 14px;
             text-decoration: none;
-            /* Menghapus garis bawah */
         }
 
         .info-section {
@@ -130,10 +129,7 @@
 
 <body>
     @forelse ($jadwalPerKelas as $namaKelompok => $jadwals)
-
-        {{-- PERBAIKAN: Logika if diletakkan di sini. Kelas 'page-break' hanya ditambahkan jika BUKAN halaman terakhir. --}}
-        <div class="container @if (!$loop->last) page-break @endif">
-
+        <div class="container page-break">
             <div class="kop-surat">
                 <table style="width: 100%; border: none;">
                     <tr>
@@ -163,6 +159,16 @@
                             <td>KELAS</td>
                             <td>:</td>
                             <td>{{ $namaKelompok }}</td>
+                        </tr>
+                        {{-- PERBAIKAN: Menambahkan Tahun Ajaran di sini --}}
+                        <tr>
+                            <td>TAHUN AJARAN</td>
+                            <td>:</td>
+                            @php
+                                // Ambil angkatan dari kelas pertama di grup ini
+                                $angkatan = $jadwals->first()->penugasan->kelas->angkatan ?? null;
+                            @endphp
+                            <td>{{ $angkatan ? $angkatan . '/' . ($angkatan + 1) : 'N/A' }}</td>
                         </tr>
                     @endif
                 </table>
@@ -243,8 +249,9 @@
             </div>
         </div>
 
-        {{-- PERBAIKAN: Menghapus div page-break tambahan dari sini --}}
-
+        @if (!$loop->last)
+            <div style="page-break-after: always;"></div>
+        @endif
     @empty
         <div class="container">
             <p style="text-align: center; padding: 50px;">Tidak ada data jadwal yang bisa dicetak.</p>
