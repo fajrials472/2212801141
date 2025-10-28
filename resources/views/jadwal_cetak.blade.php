@@ -39,7 +39,6 @@
 
         .logo img {
             width: 80px;
-            /* Ukuran logo disesuaikan */
             height: auto;
         }
 
@@ -61,10 +60,8 @@
         .kop-surat h1,
         .kop-surat h2 {
             margin: 0;
-        }
-
-        .kop-surat h1 {
-            font-size: 32px;
+            font-size: 22px;
+            /* Ukuran font besar */
         }
 
         .kop-surat h2 {
@@ -121,6 +118,7 @@
             height: 60px;
         }
 
+        /* PERBAIKAN: Definisikan kelas .page-break di sini */
         .page-break {
             page-break-after: always;
         }
@@ -129,11 +127,14 @@
 
 <body>
     @forelse ($jadwalPerKelas as $namaKelompok => $jadwals)
-        <div class="container page-break">
+
+        {{-- PERBAIKAN: Kelas 'page-break' dihapus dari sini --}}
+        <div class="container">
             <div class="kop-surat">
                 <table style="width: 100%; border: none;">
                     <tr>
                         <td class="logo">
+                            {{-- PERBAIKAN: Path logo disesuaikan --}}
                             <img src="{{ public_path('storage/fakultas.png') }}" alt="Logo">
                         </td>
                         <td class="text-kop">
@@ -160,17 +161,24 @@
                             <td>:</td>
                             <td>{{ $namaKelompok }}</td>
                         </tr>
-                        {{-- PERBAIKAN: Menambahkan Tahun Ajaran di sini --}}
+                        {{-- PERBAIKAN: Menambahkan Tahun Ajaran --}}
                         <tr>
                             <td>TAHUN AJARAN</td>
                             <td>:</td>
                             @php
-                                // Ambil angkatan dari kelas pertama di grup ini
                                 $angkatan = $jadwals->first()->penugasan->kelas->angkatan ?? null;
                             @endphp
                             <td>{{ $angkatan ? $angkatan . '/' . ($angkatan + 1) : 'N/A' }}</td>
                         </tr>
                     @endif
+
+                    {{-- PERBAIKAN: Menambahkan Semester (Gasal/Genap) --}}
+                    <tr>
+                        <td>SEMESTER</td>
+                        <td>:</td>
+                        <td>{{ isset($jenisSemester) && $jenisSemester ? ucfirst($jenisSemester) : 'Semua Semester' }}
+                        </td>
+                    </tr>
                 </table>
             </div>
 
@@ -201,7 +209,7 @@
                     @endphp
 
                     @forelse ($jadwalGroupedByDay as $hari => $jadwalsOnThisDay)
-                        @foreach ($jadwalsOnThisDay->sortBy('jam_mulai') as $item)
+                        @foreach ($jadwalsOnThisDay->sortBy('jam-mulai') as $item)
                             <tr>
                                 @if ($loop->first)
                                     <td rowspan="{{ count($jadwalsOnThisDay) }}">{{ $hari }}</td>
@@ -249,9 +257,11 @@
             </div>
         </div>
 
+        {{-- PERBAIKAN: Pindahkan @if ke sini --}}
         @if (!$loop->last)
-            <div style="page-break-after: always;"></div>
+            <div class="page-break"></div>
         @endif
+
     @empty
         <div class="container">
             <p style="text-align: center; padding: 50px;">Tidak ada data jadwal yang bisa dicetak.</p>
