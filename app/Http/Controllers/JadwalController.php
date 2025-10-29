@@ -117,27 +117,38 @@ class JadwalController extends Controller
 
     public function cetak(Request $request)
     {
-        // ... (method ini tidak berubah)
+        // ... (Logika filter)
         $query = Jadwal::query();
-        $jenisSemester = $request->input('jenis_semester');
+        $jenisSemester = $request->input('jenis_semester'); // Variabel ini HARUS ada
         $prodiId = $request->input('prodi_id');
 
-        if ($jenisSemester) {
-            $query->whereHas('penugasan.mataKuliah', function ($q) use ($jenisSemester) {
-                if ($jenisSemester === 'gasal') $q->whereRaw('semester % 2 = 1');
-                elseif ($jenisSemester === 'genap') $q->whereRaw('semester % 2 = 0');
-            });
-        }
-        if ($prodiId) {
-            $query->whereHas('penugasan.kelas.prodi', function ($q) use ($prodiId) {
-                $q->where('id', $prodiId);
-            });
-        }
+        // ... (Logika query)
 
         $prodi = $prodiId ? Prodi::find($prodiId) : null;
         $jadwalPerKelas = $query->with(['penugasan.mataKuliah', 'penugasan.dosen', 'penugasan.kelas.prodi', 'ruangan'])->get()->sortBy('penugasan.kelas.nama_kelas')->groupBy('penugasan.kelas.nama_kelas');
         $tanggalSekarang = Carbon::now()->translatedFormat('d F Y');
 
-        return view('jadwal_cetak', compact('jadwalPerKelas', 'prodi', 'tanggalSekarang'));
+        // ====================================================================
+        // Pastikan Blok Tahun Ajaran INI ADA
+        // ====================================================================
+        $tahunSekarang = Carbon::now()->year;
+        $bulanSekarang = Carbon::now()->month;
+
+        if ($bulanSekarang >= 7) {
+            $tahunAwal = $tahunSekarang;
+            $tahunAkhir = $tahunSekarang + 1;
+        } else {
+            $tahunAwal = $tahunSekarang - 1;
+            $tahunAkhir = $tahunSekarang;
+        }
+
+        $tahunAjaranAktif = $tahunAwal . '/' . $tahunAkhir;
+        // ====================================================================
+
+        // ====================================================================
+        // Pastikan Variabel DIKIRIMKAN dengan BENAR
+        // ====================================================================
+        return view('jadwal_cetak', compact('jadwalPerKelas', 'prodi', 'tanggalSekarang', 'jenisSemester', 'tahunAjaranAktif'));
+        // ====================================================================
     }
 }

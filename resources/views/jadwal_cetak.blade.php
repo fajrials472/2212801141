@@ -165,11 +165,8 @@
                         <tr>
                             <td>TAHUN AJARAN</td>
                             <td>:</td>
-                            @php
-                                $angkatan = $jadwals->first()->penugasan->kelas->angkatan ?? null;
-                            @endphp
-                            <td>{{ $angkatan ? $angkatan . '/' . ($angkatan + 1) : 'N/A' }}</td>
-                        </tr>
+                            <td>{{ $tahunAjaranAktif ?? '2025/2026' }}</td>
+                            </tr>
                     @endif
 
                     {{-- PERBAIKAN: Menambahkan Semester (Gasal/Genap) --}}
