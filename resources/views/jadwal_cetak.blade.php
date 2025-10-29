@@ -176,7 +176,22 @@
                     <tr>
                         <td>SEMESTER</td>
                         <td>:</td>
-                        <td>{{ isset($jenisSemester) && $jenisSemester ? ucfirst($jenisSemester) : 'Semua Semester' }}
+                        <td>
+                            @php
+                                // Ambil angka semester dari kelas pada jadwal pertama
+                                $kelas = $jadwals->first()->penugasan->kelas ?? null;
+                                $semesterAngka = $kelas->semester ?? 'N/A';
+
+                                // Ambil jenis semester (Gasal/Genap) dari variabel yang dikirimkan ke view
+                                $semesterTeks =
+                                    isset($jenisSemester) && $jenisSemester ? '(' . ucfirst($jenisSemester) . ')' : '';
+
+                                $displaySemester =
+                                    $semesterAngka != 'N/A' || $semesterTeks != ''
+                                        ? trim("$semesterAngka $semesterTeks")
+                                        : 'Semua Semester';
+                            @endphp
+                            {{ $displaySemester }}
                         </td>
                     </tr>
                 </table>
