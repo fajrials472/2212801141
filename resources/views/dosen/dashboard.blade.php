@@ -69,31 +69,56 @@
                             </tr>
                         </thead>
                         <tbody>
-                            @forelse ($jadwalGroupedByDay as $hari => $jadwalsOnThisDay)
+                            @php
+                                // Definisikan peta konversi angka hari ke nama hari
+                                $mapHari = [
+                                    1 => 'Senin',
+                                    2 => 'Selasa',
+                                    3 => 'Rabu',
+                                    4 => 'Kamis',
+                                    5 => 'Jumat',
+                                    6 => 'Sabtu',
+                                    7 => 'Minggu',
+                                    99 => 'Minggu', // Jika ada hari dengan kode 99, berikan label N/A
+                                ];
+                            @endphp
+                            @forelse ($jadwalGroupedByDay as $kodeHari => $jadwalsOnThisDay)
                                 @foreach ($jadwalsOnThisDay->sortBy('jam_mulai') as $jadwal)
                                     <tr>
                                         @if ($loop->first)
                                             <td rowspan="{{ count($jadwalsOnThisDay) }}">
-                                                <strong>{{ $hari }}</strong></td>
+                                                @php
+                                                    // Ambil nama hari dari peta. Jika kode tidak ada, gunakan kode aslinya.
+                                                    $namaHari = $mapHari[(int) $kodeHari] ?? $kodeHari;
+                                                @endphp
+                                                
+                                                <strong>{{ $namaHari }}</strong></td>
                                         @endif
 
-                                        <td>{{ date('H:i', strtotime($jadwal->jam_mulai)) }} -
+                                        <td>
+                                            {{ date('H:i', strtotime($jadwal->jam_mulai)) }} -
+                                            
                                             {{ date('H:i', strtotime($jadwal->jam_selesai)) }}</td>
-                                        <td class="text-start">{{ $jadwal->penugasan->mataKuliah->nama_mk ?? 'N/A' }}</td>
-                                        <td>{{ $jadwal->penugasan->mataKuliah->semester ?? 'N/A' }}</td>
-                                        <td>{{ $jadwal->penugasan->kelas->nama_kelas ?? 'N/A' }}</td>
-                                        <td>{{ $jadwal->ruangan->nama_ruangan ?? 'N/A' }}</td>
-                                    </tr>
+                                        <td class="text-start">
+                                            {{ $jadwal->penugasan->mataKuliah->nama_mk ?? 'N/A' }}</td>
+                                        <td>
+                                            {{ $jadwal->penugasan->mataKuliah->semester ?? 'N/A' }}</td>
+                                        <td>
+                                            {{ $jadwal->penugasan->kelas->nama_kelas ?? 'N/A' }}</td>
+                                        <td>
+                                            {{ $jadwal->ruangan->nama_ruangan ?? 'N/A' }}</td>
+                                        </tr>
                                 @endforeach
                             @empty
                                 <tr>
                                     <td colspan="6" class="p-5">
                                         <h4>Jadwal tidak ditemukan.</h4>
-                                        <p class="text-muted">Tidak ada jadwal yang cocok dengan filter yang Anda pilih.</p>
-                                    </td>
-                                </tr>
-                            @endforelse
-                        </tbody>
+                                        <p class="text-muted">Tidak ada jadwal yang
+                                            cocok dengan filter yang Anda pilih.</p>
+                                        </td>
+                                    </tr>
+                                @endforelse
+                            </tbody>
                     </table>
                 </div>
             </div>

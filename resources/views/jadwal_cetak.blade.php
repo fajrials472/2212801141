@@ -149,70 +149,60 @@
 
             <div class="info-section">
                 <table class="info-table">
+                    @php
+                        // Ambil data Kelas dan Prodi dari item pertama secara aman
+                        $firstJadwal = $jadwals->first();
+                        $kelas = $firstJadwal?->penugasan?->kelas;
+                        $prodiData = $prodi ?? $kelas?->prodi;
+
+                        // Fungsi untuk konversi angka ke Romawi
+                        $numberToRoman = function ($number) {
+                            $romans = [
+                                10 => 'X',
+                                9 => 'IX',
+                                5 => 'V',
+                                4 => 'IV',
+                                1 => 'I',
+                            ];
+                            $result = '';
+                            foreach ($romans as $value => $symbol) {
+                                while ($number >= $value) {
+                                    $result .= $symbol;
+                                    $number -= $value;
+                                }
+                            }
+                            return $result;
+                        };
+                    @endphp
+
+                    {{-- 1. PROGRAM STUDI --}}
                     <tr>
                         <td style="width: 120px;">PROGRAM STUDI</td>
                         <td style="width: 10px;">:</td>
-                        <td>{{ strtoupper($prodi->nama_prodi ?? ($jadwals->first()->penugasan->kelas->prodi->nama_prodi ?? 'Semua Program Studi')) }}
+                        <td>{{ strtoupper($prodiData->nama_prodi ?? 'Semua Program Studi') }}
                         </td>
                     </tr>
-                    @if (!isset($dosen))
-                        <tr>
-                            <td>KELAS</td>
-                            <td>:</td>
-                            <td>{{ $namaKelompok }}</td>
-                        </tr>
-                        {{-- PERBAIKAN: Menambahkan Tahun Ajaran --}}
-                        <tr>
-                            <td>TAHUN AJARAN</td>
-                            <td>:</td>
-                            <td>{{ $tahunAjaranAktif ?? '2025/2026' }}</td>
-                        </tr>
-                    @endif
 
-                    {{-- PERBAIKAN: Menambahkan Semester (Gasal/Genap) --}}
+                    {{-- 2. TAHUN AJARAN --}}
                     <tr>
-                        <td>SEMESTER</td>
-                        <td>:</td>
+                        <td style="width: 120px;">TAHUN AJARAN</td>
+                        <td style="width: 10px;">:</td>
+                        <td>{{ $tahunAjaranAktif ?? '2025/2026' }}</td>
+                    </tr>
+
+                    {{-- 3. SEMESTER (Romawi + OPSI Gasal/Genap) --}}
+                    <tr>
+                        <td style="width: 120px;">SEMESTER</td>
+                        <td style="width: 10px;">:</td>
                         <td>
                             @php
-                                // Fungsi untuk konversi angka ke Romawi
-                                $numberToRoman = function ($number) {
-                                    $romans = [
-                                        10 => 'X',
-                                        9 => 'IX',
-                                        5 => 'V',
-                                        4 => 'IV',
-                                        1 => 'I',
-                                    ];
-                                    $result = '';
-                                    foreach ($romans as $value => $symbol) {
-                                        while ($number >= $value) {
-                                            $result .= $symbol;
-                                            $number -= $value;
-                                        }
-                                    }
-                                    return $result;
-                                };
-
-                                // Ambil data Kelas dan Semester secara aman
-                                $kelas = $jadwals->first()?->penugasan?->kelas;
-                                $semesterAngka = $kelas?->semester; // Angka (1, 2, 3...)
-
-                                // Konversi ke Romawi
-                                $semesterRomawi = '';
-                                if (is_numeric($semesterAngka) && $semesterAngka > 0) {
-                                    $semesterRomawi = $numberToRoman($semesterAngka);
-                                }
-
-                                // Ambil jenis semester (Gasal/Genap)
-                                $semesterTeks =
-                                    isset($jenisSemester) && $jenisSemester ? '(' . ucfirst($jenisSemester) . ')' : '';
-
-                                $displaySemester = trim("$semesterRomawi $semesterTeks");
-
-                                // Tampilkan
-                                echo $displaySemester ?: 'Semua Semester';
+                                // Cek apakah filter jenis semester (gasal/genap) tersedia dan ubah huruf pertamanya menjadi kapital
+                                $displaySemester =
+                                    isset($jenisSemester) && $jenisSemester
+                                        ? ucfirst($jenisSemester)
+                                        : 'Gasal';
                             @endphp
+                            {{ $displaySemester }}
                         </td>
                     </tr>
                 </table>

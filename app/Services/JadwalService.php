@@ -30,13 +30,10 @@ class JadwalService
     // PERBAIKAN: Method generateJadwal sekarang menerima parameter
     public function generateJadwal($tahunAjaran, $jenisSemester)
     {
-        // 1. Dapatkan ID penugasan yang relevan untuk periode ini
+        // 1. Dapatkan ID penugasan yang relevan untuk periode ini (HANYA UNTUK YANG AKAN DI-GENERATE)
         $penugasanIdsQuery = DB::table('penugasan')
             ->join('kelas', 'penugasan.kelas_id', '=', 'kelas.id')
             ->join('mata_kuliah', 'penugasan.mata_kuliah_id', '=', 'mata_kuliah.id');
-
-        // PERBAIKAN: HAPUS filter berdasarkan angkatan
-        // ->where('kelas.angkatan', $tahunAjaran) // <-- BARIS INI DIHAPUS
 
         // Filter HANYA berdasarkan Jenis Semester (Gasal/Genap)
         if ($jenisSemester === 'gasal') {
@@ -47,16 +44,23 @@ class JadwalService
 
         $penugasanIds = $penugasanIdsQuery->pluck('penugasan.id');
 
-        // 2. Arsipkan dan Hapus jadwal lama HANYA untuk penugasan yang relevan
-        $jadwalAktif = DB::table('jadwal')->whereIn('penugasan_id', $penugasanIds)->get();
+        // ====================================================================
+        // MODIFIKASI INTI: Arsipkan dan Hapus SEMUA jadwal yang ada
+        // ====================================================================
+
+        // Ambil SEMUA jadwal aktif saat ini untuk diarsipkan
+        $jadwalAktif = DB::table('jadwal')->get();
+
         if ($jadwalAktif->isNotEmpty()) {
-            // Kita tetap gunakan $tahunAjaran di sini HANYA UNTUK NAMA ARSIP
+            // Buat versi arsip baru
             $namaVersi = 'Arsip Jadwal ' . $tahunAjaran . ' (' . ucfirst($jenisSemester) . ') - ' . now()->format('d M Y');
             $versionId = DB::table('jadwal_versions')->insertGetId([
                 'nama_versi' => $namaVersi,
                 'created_at' => now(),
                 'updated_at' => now(),
             ]);
+
+            // Masukkan SEMUA jadwal yang baru diambil ke arsip
             $jadwalUntukArsip = $jadwalAktif->map(fn($item) => [
                 'jadwal_version_id' => $versionId,
                 'penugasan_id' => $item->penugasan_id,
@@ -69,8 +73,12 @@ class JadwalService
             ])->toArray();
             DB::table('arsip_jadwal')->insert($jadwalUntukArsip);
 
-            DB::table('jadwal')->whereIn('penugasan_id', $penugasanIds)->delete();
+            // HAPUS SEMUA data dari tabel 'jadwal' (Genap & Gasal)
+            // Menggunakan truncate untuk reset total tabel, atau delete()
+            DB::table('jadwal')->truncate();
         }
+        // ====================================================================
+        // AKHIR MODIFIKASI
 
         // 3. Ambil data penugasan untuk di-generate (HANYA YANG RELEVAN)
         $penugasan = DB::table('penugasan')
@@ -84,7 +92,7 @@ class JadwalService
 
         set_time_limit(300);
 
-        // ... (Sisa logika perulangan 'while' Anda tidak perlu diubah) ...
+        // ... (Sisa logika perulangan 'while' Anda tetap sama, dan akan mengisi tabel 'jadwal' yang sekarang kosong dengan jadwal yang baru) ...
         $ruangan = Ruangan::all();
         $jadwalDosen = [];
         $jadwalRuangan = [];
