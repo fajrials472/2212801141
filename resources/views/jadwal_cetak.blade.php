@@ -166,7 +166,7 @@
                             <td>TAHUN AJARAN</td>
                             <td>:</td>
                             <td>{{ $tahunAjaranAktif ?? '2025/2026' }}</td>
-                            </tr>
+                        </tr>
                     @endif
 
                     {{-- PERBAIKAN: Menambahkan Semester (Gasal/Genap) --}}
@@ -175,20 +175,44 @@
                         <td>:</td>
                         <td>
                             @php
-                                // Ambil angka semester dari kelas pada jadwal pertama
-                                $kelas = $jadwals->first()->penugasan->kelas ?? null;
-                                $semesterAngka = $kelas->semester ?? 'N/A';
+                                // Fungsi untuk konversi angka ke Romawi
+                                $numberToRoman = function ($number) {
+                                    $romans = [
+                                        10 => 'X',
+                                        9 => 'IX',
+                                        5 => 'V',
+                                        4 => 'IV',
+                                        1 => 'I',
+                                    ];
+                                    $result = '';
+                                    foreach ($romans as $value => $symbol) {
+                                        while ($number >= $value) {
+                                            $result .= $symbol;
+                                            $number -= $value;
+                                        }
+                                    }
+                                    return $result;
+                                };
 
-                                // Ambil jenis semester (Gasal/Genap) dari variabel yang dikirimkan ke view
+                                // Ambil data Kelas dan Semester secara aman
+                                $kelas = $jadwals->first()?->penugasan?->kelas;
+                                $semesterAngka = $kelas?->semester; // Angka (1, 2, 3...)
+
+                                // Konversi ke Romawi
+                                $semesterRomawi = '';
+                                if (is_numeric($semesterAngka) && $semesterAngka > 0) {
+                                    $semesterRomawi = $numberToRoman($semesterAngka);
+                                }
+
+                                // Ambil jenis semester (Gasal/Genap)
                                 $semesterTeks =
                                     isset($jenisSemester) && $jenisSemester ? '(' . ucfirst($jenisSemester) . ')' : '';
 
-                                $displaySemester =
-                                    $semesterAngka != 'N/A' || $semesterTeks != ''
-                                        ? trim("$semesterAngka $semesterTeks")
-                                        : 'Semua Semester';
+                                $displaySemester = trim("$semesterRomawi $semesterTeks");
+
+                                // Tampilkan
+                                echo $displaySemester ?: 'Semua Semester';
                             @endphp
-                            {{ $displaySemester }}
                         </td>
                     </tr>
                 </table>
