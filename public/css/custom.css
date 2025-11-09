@@ -1,0 +1,174 @@
+/* --- Variabel Warna Tema UMPAR --- */
+:root {
+    /* Biru Tua dari Logo UMPAR */
+    --bs-primary: #000080; /* Hampir navy, kuat dan profesional */
+    /* Merah dari Logo UMPAR */
+    --bs-danger: #dc3545; /* Merah standar Bootstrap untuk danger/error */
+    --bs-red-umpar: #a00000; /* Merah yang lebih gelap/kuat dari logo */
+
+    --bs-secondary: #6c757d; /* Abu-abu standar */
+    --bs-success: #28a745; /* Hijau standar (bisa diganti jika ada warna hijau spesifik di logo) */
+    --bs-info: #17a2b8; /* Biru muda standar */
+    --bs-warning: #ffc107; /* Kuning standar (bisa diganti jika ada warna kuning spesifik di logo) */
+
+    --bs-light: #f8f9fa; /* Latar belakang terang */
+    --bs-dark: #212529; /* Teks gelap/elemen gelap */
+    --bs-body-bg: #f2f5f9; /* Latar belakang halaman yang sedikit lebih gelap dari putih, agar terlihat segar */
+
+    --bs-font-sans-serif: 'Figtree', system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", "Liberation Sans", sans-serif;
+}
+
+body {
+    font-family: var(--bs-font-sans-serif);
+    background-color: var(--bs-body-bg);
+    color: var(--bs-dark); /* Warna teks default */
+}
+
+/* --- Sidebar --- */
+.sidebar {
+    height: 100vh;
+    width: 250px;
+    position: fixed;
+    top: 0;
+    left: 0;
+    background-color: var(--bs-primary); /* Sidebar menggunakan biru tua UMPAR */
+    padding-top: 20px;
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15); /* Bayangan sedikit untuk menonjolkan sidebar */
+    z-index: 1000; /* Pastikan sidebar di atas konten lain */
+}
+
+.sidebar h4, .sidebar p {
+    color: #ffffff; /* Teks di sidebar jadi putih */
+}
+
+.sidebar a.nav-link {
+    color: rgba(255, 255, 255, 0.75); /* Warna teks link sedikit transparan putih */
+    padding: 10px 15px;
+    text-decoration: none;
+    display: block;
+    border-radius: 0.375rem;
+    margin: 2px 10px; /* Jarak dari tepi sidebar */
+    transition: background-color 0.2s, color 0.2s, transform 0.2s; /* Tambah efek transform */
+}
+
+.sidebar a.nav-link:hover {
+    background-color: rgba(255, 255, 255, 0.1); /* Latar belakang hover lebih transparan putih */
+    color: #ffffff;
+    transform: translateX(3px); /* Sedikit bergeser saat di-hover */
+}
+
+/* Style untuk link yang sedang aktif */
+.sidebar a.nav-link.active {
+    background-color: #ffffff; /* Warna putih untuk link aktif */
+    color: var(--bs-primary); /* Teks biru tua UMPAR untuk link aktif */
+    font-weight: 600; /* Lebih tebal */
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.1); /* Bayangan kecil */
+}
+
+.sidebar hr {
+    border-top: 1px solid rgba(255, 255, 255, 0.2); /* Garis pemisah transparan putih */
+    margin: 1rem 10px;
+}
+
+/* --- Konten Utama --- */
+.content-wrapper {
+    margin-left: 250px; /* Sesuaikan dengan lebar sidebar */
+    padding: 20px; /* Tambah padding keseluruhan */
+}
+
+/* --- Navbar (opsional, jika ada navbar atas) --- */
+.navbar {
+    background-color: #ffffff;
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+}
+
+/* --- Tombol --- */
+.btn-primary {
+    background-color: var(--bs-primary);
+    border-color: var(--bs-primary);
+    transition: all 0.2s ease-in-out;
+}
+.btn-primary:hover {
+    background-color: #000066; /* Versi lebih gelap dari --bs-primary */
+    border-color: #000066;
+    transform: translateY(-1px); /* Efek tekan */
+}
+
+.btn-danger {
+    background-color: var(--bs-red-umpar);
+    border-color: var(--bs-red-umpar);
+}
+.btn-danger:hover {
+    background-color: #8a0000; /* Versi lebih gelap dari --bs-red-umpar */
+    border-color: #8a0000;
+}
+
+/* --- Card (Kartu) --- */
+.card {
+    border: 1px solid rgba(0, 0, 0, 0.05); /* Border tipis agar terlihat lebih rapi */
+    border-radius: 0.75rem; /* Lengkungan sedikit lebih besar untuk kesan modern */
+    box-shadow: 0 0.25rem 0.75rem rgba(0, 0, 0, 0.05); /* Bayangan yang lebih lembut */
+    margin-bottom: 1.5rem;
+}
+
+.card-header {
+    background-color: #ffffff;
+    border-bottom: 1px solid #e0e0e0;
+    font-weight: 600; /* Lebih tebal */
+    padding: 1.25rem 1.5rem; /* Padding sedikit lebih besar */
+    color: var(--bs-dark);
+    border-top-left-radius: 0.75rem; /* Sesuaikan radius */
+    border-top-right-radius: 0.75rem; /* Sesuaikan radius */
+}
+
+/* --- Tabel --- */
+.table {
+    border-radius: 0.5rem;
+    overflow: hidden; /* Penting untuk rounded corners pada tabel */
+}
+.table thead.table-dark th {
+    background-color: var(--bs-primary); /* Header tabel menggunakan biru tua UMPAR */
+    border-color: var(--bs-primary);
+    color: #ffffff;
+    font-weight: 600;
+}
+.table th, .table td {
+    vertical-align: middle;
+    padding: 0.75rem 1rem;
+}
+.table-hover tbody tr:hover {
+    background-color: #e9ecef; /* Latar belakang hover di tabel */
+}
+
+/* --- Form --- */
+.form-control,
+.form-select {
+    border-color: #ced4da;
+    border-radius: 0.375rem;
+}
+.form-control:focus,
+.form-select:focus {
+    border-color: var(--bs-primary);
+    box-shadow: 0 0 0 0.25rem rgba(0, 0, 128, 0.15); /* Bayangan biru tua yang lembut */
+}
+
+/* --- Alert / Pesan Notifikasi --- */
+.alert {
+    border-radius: 0.5rem;
+    padding: 0.75rem 1.25rem;
+}
+.alert-success {
+    background-color: #d4edda;
+    color: #155724;
+    border-color: #c3e6cb;
+}
+.alert-danger {
+    background-color: #f8d7da;
+    color: #721c24;
+    border-color: #f5c6cb;
+}
+
+/* --- Utility Classes Tambahan (Opsional) --- */
+.text-primary-umpar { color: var(--bs-primary) !important; }
+.bg-primary-umpar { background-color: var(--bs-primary) !important; }
+.border-primary-umpar { border-color: var(--bs-primary) !important; }

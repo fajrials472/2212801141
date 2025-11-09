@@ -7,7 +7,7 @@
 
         <!-- Email Address or NIDN -->
         <div>
-            <x-input-label for="login" :value="__('NIDN atau Email')" />
+            <x-input-label for="login" :value="__('NIDN atau NIM')" />
             <x-text-input id="login" class="block mt-1 w-full" type="text" name="login" :value="old('login')" required autofocus autocomplete="username" />
             <x-input-error :messages="$errors->get('login')" class="mt-2" />
         </div>
