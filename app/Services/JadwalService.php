@@ -185,17 +185,41 @@ class JadwalService
         return true;
     }
 
-    private function isSlotTersedia($hari, $mulai, $selesai, $dosenId, $ruanganId, $kelasId, $jadwalDosen, $jadwalRuangan, $jadwalKelas)
-    {
+    private function isSlotTersedia(
+        $hari,
+        $mulai,
+        $selesai,
+        $dosenId,
+        $ruanganId,
+        $kelasId,
+        $jadwalDosen,
+        $jadwalRuangan,
+        $jadwalKelas
+    ) {
+        // 1. Cek Bentrok Kelas
         if (isset($jadwalKelas[$kelasId][$hari])) {
-            foreach ($jadwalKelas[$kelasId][$hari] as $jadwal) if (max($mulai, $jadwal['mulai']) < min($selesai, $jadwal['selesai'])) return false;
+            foreach ($jadwalKelas[$kelasId][$hari] as $jadwal) {
+                if (max($mulai, $jadwal['mulai']) < min($selesai, $jadwal['selesai'])) {
+                    return false; // Bentrok Kelas
+                }
+            }
         }
+        // 2. Cek Bentrok Dosen
         if (isset($jadwalDosen[$dosenId])) {
-            foreach ($jadwalDosen[$dosenId] as $jadwal) if ($jadwal['hari'] == $hari && max($mulai, $jadwal['mulai']) < min($selesai, $jadwal['selesai'])) return false;
+            foreach ($jadwalDosen[$dosenId] as $jadwal) {
+                if ($jadwal['hari'] == $hari && max($mulai, $jadwal['mulai']) < min($selesai, $jadwal['selesai'])) {
+                    return false; // Bentrok Dosen
+                }
+            }
         }
+        // 3. Cek Bentrok Ruangan
         if (isset($jadwalRuangan[$ruanganId])) {
-            foreach ($jadwalRuangan[$ruanganId] as $jadwal) if ($jadwal['hari'] == $hari && max($mulai, $jadwal['mulai']) < min($selesai, $jadwal['selesai'])) return false;
+            foreach ($jadwalRuangan[$ruanganId] as $jadwal) {
+                if ($jadwal['hari'] == $hari && max($mulai, $jadwal['mulai']) < min($selesai, $jadwal['selesai'])) {
+                    return false; // Bentrok Ruangan
+                }
+            }
         }
-        return true;
+        return true; // Slot Aman
     }
 }
