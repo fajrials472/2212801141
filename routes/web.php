@@ -17,6 +17,7 @@ use App\Http\Controllers\RekapController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\DataExportController;
 use App\Http\Controllers\SemesterController;
+use App\Http\Controllers\UjiBentrokController;
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -97,6 +98,7 @@ Route::middleware(['auth'])->group(function () {
     Route::middleware(['dosen'])->prefix('dosen')->name('dosen.')->group(function () {
         // ... (rute spesifik untuk dosen)
         Route::get('/jadwal/cetak', [JadwalCetakController::class, 'cetakPerDosen'])->name('jadwal.cetak');
+        Route::post('/request-gabung', [\App\Http\Controllers\DosenRequestController::class, 'store'])->name('request.gabung');
     });
 
     // =====================================================================
@@ -106,4 +108,13 @@ Route::middleware(['auth'])->group(function () {
         // ... (rute spesifik untuk mahasiswa)
         Route::get('/jadwal/cetak', [JadwalCetakController::class, 'cetakPerKelas'])->name('jadwal.cetak');
     });
+
+    Route::post('/admin/request-gabung/{id}/approve', [JadwalController::class, 'setujuiGabung'])
+        ->name('admin.request.approve');
+
+    Route::get('/uji-bentrok', [UjiBentrokController::class, 'index'])->name('uji.index');
+    // Route::post('/uji-bentrok/cek', [UjiBentrokController::class, 'cek'])->name('uji.cek');
+
+
+    Route::get('/uji-bentrok', [UjiBentrokController::class, 'index'])->name('uji.index');
 });

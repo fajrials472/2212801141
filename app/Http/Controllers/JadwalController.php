@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Dosen;
 use App\Models\Jadwal;
+use App\Models\Penugasan;
 use App\Models\Kelas;
 use App\Models\Prodi;
 use App\Models\Ruangan;
@@ -59,6 +60,67 @@ class JadwalController extends Controller
 
         // PERBAIKAN: Mengirim variabel allTahunAjaran ke view
         return view('jadwal', compact('jadwal', 'jenisSemester', 'allProdi', 'prodiId', 'allKelas', 'kelasId', 'arsipJadwal', 'allTahunAjaran'));
+    }
+
+    public function requestGabung(Request $request)
+    {
+        // 1. Validasi Input
+        $request->validate([
+            'mata_kuliah_id' => 'required',
+            'kelas_ids'      => 'required|array',
+            'jadwal_utama_id' => 'required', // Ini adalah ID KELAS yang jadi acuan
+        ]);
+
+        $mkId = $request->mata_kuliah_id;
+        $kelasAcuanId = $request->jadwal_utama_id; // ID Kelas yang dipilih user sebagai "Master"
+        $kelasTargetIds = $request->kelas_ids; // Array ID kelas yang mau diubah
+
+        try {
+            DB::beginTransaction();
+
+            // 2. AMBIL DATA JADWAL DARI KELAS ACUAN (MASTER)
+            // Kita cari jadwal milik kelas yang dipilih sebagai acuan
+            $jadwalMaster = Jadwal::whereHas('penugasan', function ($q) use ($kelasAcuanId, $mkId) {
+                $q->where('kelas_id', $kelasAcuanId)
+                    ->where('mata_kuliah_id', $mkId);
+            })->first();
+
+            if (!$jadwalMaster) {
+                return back()->with('error', 'Jadwal acuan tidak ditemukan!');
+            }
+
+            // 3. LOOPING UNTUK UPDATE KELAS-KELAS LAIN
+            foreach ($kelasTargetIds as $targetKelasId) {
+
+                // Jangan update diri sendiri (opsional, tapi lebih efisien)
+                if ($targetKelasId == $kelasAcuanId) continue;
+
+                // Cari jadwal milik kelas target
+                $jadwalTarget = Jadwal::whereHas('penugasan', function ($q) use ($targetKelasId, $mkId) {
+                    $q->where('kelas_id', $targetKelasId)
+                        ->where('mata_kuliah_id', $mkId);
+                })->first();
+
+                if ($jadwalTarget) {
+                    // 4. PROSES COPY-PASTE (UPDATE)
+                    // Ubah jadwal target agar SAMA PERSIS dengan jadwal master
+                    $jadwalTarget->update([
+                        'hari'        => $jadwalMaster->hari,
+                        'jam_mulai'   => $jadwalMaster->jam_mulai,
+                        'jam_selesai' => $jadwalMaster->jam_selesai,
+                        'ruangan_id'  => $jadwalMaster->ruangan_id, // Ikut ruangan master juga
+                        // 'is_gabung' => true // (Opsional) Jika ada kolom penanda gabung
+                    ]);
+                }
+            }
+
+            DB::commit();
+
+            return back()->with('success', 'Berhasil! Kelas telah digabungkan mengikuti jadwal pilihan Anda.');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
+        }
     }
 
     // PERBAIKAN: Mengubah method generate untuk menerima Request
@@ -150,5 +212,61 @@ class JadwalController extends Controller
         // ====================================================================
         return view('jadwal_cetak', compact('jadwalPerKelas', 'prodi', 'tanggalSekarang', 'jenisSemester', 'tahunAjaranAktif'));
         // ====================================================================
+    }
+
+    public function setujuiGabung($id)
+    {
+        // 1. Ambil data permintaan dari tabel request
+        $requestGabung = \App\Models\RequestGabung::findOrFail($id);
+
+        if ($requestGabung->status !== 'pending') {
+            return back()->with('error', 'Permintaan ini sudah diproses sebelumnya.');
+        }
+
+        // 2. Ambil ID Kelas yang mau diubah (Target) & ID Kelas Acuan
+        // Logikanya: Dosen memilih jadwal milik salah satu kelas (Master) untuk dipakai kelas lain
+        // PENTING: Kamu harus memastikan di form request Dosen tadi ada input 'jadwal_utama_id'
+        // Jika belum ada, kita asumsikan kelas PERTAMA di list adalah Acuan/Masternya.
+
+        $kelasIds = $requestGabung->kelas_ids; // Array [1, 2, 3]
+        $kelasMasterId = $kelasIds[0]; // Kita ambil kelas pertama sebagai contoh jadwal yg benar
+
+        // 3. Cari Jadwal Master (Jadwal yang mau dicopy)
+        $jadwalMaster = Jadwal::whereHas('penugasan', function ($q) use ($requestGabung, $kelasMasterId) {
+            $q->where('dosen_id', $requestGabung->dosen_id)
+                ->where('kelas_id', $kelasMasterId)
+                ->where('mata_kuliah_id', $requestGabung->mata_kuliah_id);
+        })->first();
+
+        if (!$jadwalMaster) {
+            return back()->with('error', 'Jadwal sumber (Master) belum dibuat. Tidak bisa menggabungkan.');
+        }
+
+        // 4. EKSEKUSI: Loop ke kelas-kelas lain untuk samakan jadwalnya
+        foreach ($kelasIds as $targetId) {
+            if ($targetId == $kelasMasterId) continue; // Skip kelas master (jangan timpa diri sendiri)
+
+            // Cari jadwal milik kelas target
+            $jadwalTarget = Jadwal::whereHas('penugasan', function ($q) use ($requestGabung, $targetId) {
+                $q->where('dosen_id', $requestGabung->dosen_id)
+                    ->where('kelas_id', $targetId)
+                    ->where('mata_kuliah_id', $requestGabung->mata_kuliah_id);
+            })->first();
+
+            // Update Jadwal Target
+            if ($jadwalTarget) {
+                $jadwalTarget->update([
+                    'hari'        => $jadwalMaster->hari,
+                    'jam_mulai'   => $jadwalMaster->jam_mulai,
+                    'jam_selesai' => $jadwalMaster->jam_selesai,
+                    'ruangan_id'  => $jadwalMaster->ruangan_id,
+                ]);
+            }
+        }
+
+        // 5. Ubah Status Permintaan jadi "Disetujui"
+        $requestGabung->update(['status' => 'disetujui']);
+
+        return back()->with('success', 'Jadwal berhasil digabungkan!');
     }
 }

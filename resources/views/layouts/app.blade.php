@@ -8,18 +8,57 @@
 
     <title>Dashboard - @yield('title')</title>
 
+    {{-- Fonts --}}
     <link rel="preconnect" href="https://fonts.bunny.net">
     <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
 
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
-
-    <link rel="stylesheet" href="{{ asset('css/custom.css') }}">
-
+    {{-- 1. LOAD TAILWIND (VITE) --}}
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 
-    {{-- PERBAIKAN: CSS Internal dihapus karena sudah dipindah ke custom.css --}}
+    {{-- 2. LOAD BOOTSTRAP --}}
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <link rel="stylesheet" href="{{ asset('css/custom.css') }}">
+
+    {{-- 3. CSS PATCH (PERBAIKAN KHUSUS KONFLIK TAILWIND VS BOOTSTRAP) --}}
+    <style>
+        /* Paksa Checkbox agar terlihat (mengalahkan reset Tailwind) */
+        .form-check-input {
+            appearance: auto !important;
+            /* Kembalikan bentuk asli checkbox browser */
+            -webkit-appearance: auto !important;
+            width: 1.2em !important;
+            height: 1.2em !important;
+            margin-right: 0.5em !important;
+            border: 1px solid #6c757d !important;
+            /* Beri garis tepi agar terlihat */
+            background-color: #fff !important;
+        }
+
+        /* Pastikan teks di dalam modal/accordion berwarna hitam */
+        .modal-body,
+        .accordion-button,
+        .list-group-item,
+        .form-check-label {
+            color: #000 !important;
+            font-size: 1rem !important;
+        }
+
+        /* Perbaikan konflik class .collapse antara Tailwind dan Bootstrap */
+        .accordion-collapse.collapse:not(.show) {
+            display: none !important;
+        }
+
+        .accordion-collapse.collapse.show {
+            display: block !important;
+        }
+
+        /* Pastikan background accordion putih, bukan transparan */
+        .accordion-item {
+            background-color: #fff !important;
+            border: 1px solid #dee2e6 !important;
+        }
+    </style>
 </head>
 
 <body class="font-sans antialiased">
@@ -89,6 +128,14 @@
                     <li class="nav-item">
                         <a class="nav-link {{ request()->routeIs('jadwal.lihat') ? 'active' : '' }}"
                             href="{{ route('jadwal.lihat') }}">Lihat Jadwal Per Kelas</a>
+                    </li>
+
+                    {{-- MENU BARU: Disamakan formatnya dengan yang lain --}}
+                    <li class="nav-item">
+                        <a class="nav-link {{ request()->routeIs('uji.*') ? 'active' : '' }}"
+                            href="{{ route('uji.index') }}">
+                            Uji Bentrok & Simulasi
+                        </a>
                     </li>
                 @endif
 

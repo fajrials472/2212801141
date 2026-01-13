@@ -168,4 +168,61 @@
             </div>
         </div>
     </div>
+
+    @if(Auth::user()->role == 'admin')
+
+<div class="card mb-4 border-warning">
+    <div class="card-header bg-warning text-dark fw-bold">
+        <i class="fas fa-exclamation-triangle"></i> Permintaan Penggabungan Kelas (Pending)
+    </div>
+    <div class="card-body">
+        @if($requestPending->count() > 0)
+            <div class="table-responsive">
+                <table class="table table-bordered table-striped">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Dosen</th>
+                            <th>Mata Kuliah</th>
+                            <th>Kelas yang Digabung</th>
+                            <th>Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach($requestPending as $req)
+                        <tr>
+                            <td>{{ $req->dosen->nama_dosen }}</td>
+                            <td>{{ $req->mataKuliah->nama_mk }}</td>
+                            <td>
+                                {{-- Loop array ID kelas untuk menampilkan nama kelas --}}
+                                @foreach($req->kelas_ids as $kid)
+                                    @php $k = \App\Models\Kelas::find($kid); @endphp
+                                    <span class="badge bg-secondary">{{ $k->nama_kelas ?? 'N/A' }}</span>
+                                @endforeach
+                            </td>
+                            <td>
+                                {{-- =============================================== --}}
+                                {{-- INI CARA PEMANGGILANNYA (TOMBOL SETUJUI) --}}
+                                {{-- =============================================== --}}
+                                <form action="{{ route('admin.request.approve', $req->id) }}" method="POST" class="d-inline">
+                                    @csrf 
+                                    {{-- @csrf PENTING untuk keamanan --}}
+                                    
+                                    <button type="submit" class="btn btn-success btn-sm" onclick="return confirm('Yakin ingin menyetujui dan MENGUBAH jadwal asli?')">
+                                        <i class="fas fa-check"></i> Setujui
+                                    </button>
+                                </form>
+                                {{-- =============================================== --}}
+                            </td>
+                        </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+        @else
+            <p class="text-muted mb-0">Tidak ada permintaan penggabungan kelas baru.</p>
+        @endif
+    </div>
+</div>
+
+@endif
 @endsection
